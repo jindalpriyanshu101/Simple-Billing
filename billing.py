@@ -38,15 +38,18 @@ class SimpleBillingApp:
     def create_login_screen(self):
         self.clear_screen()
 
-        ctk.CTkLabel(self.root, text="Username:").pack(pady=5)
-        self.username_entry = ctk.CTkEntry(self.root)
+        login_frame = ctk.CTkFrame(self.root)
+        login_frame.pack(expand=True)
+
+        ctk.CTkLabel(login_frame, text="Username:").pack(pady=5)
+        self.username_entry = ctk.CTkEntry(login_frame)
         self.username_entry.pack(pady=5)
 
-        ctk.CTkLabel(self.root, text="Password:").pack(pady=5)
-        self.password_entry = ctk.CTkEntry(self.root, show="*")
+        ctk.CTkLabel(login_frame, text="Password:").pack(pady=5)
+        self.password_entry = ctk.CTkEntry(login_frame, show="*")
         self.password_entry.pack(pady=5)
 
-        ctk.CTkButton(self.root, text="Login", command=self.login).pack(pady=10)
+        ctk.CTkButton(login_frame, text="Login", command=self.login).pack(pady=10)
 
     def login(self):
         username = self.username_entry.get()
@@ -67,40 +70,50 @@ class SimpleBillingApp:
     def create_admin_screen(self):
         self.clear_screen()
 
-        ctk.CTkButton(self.root, text="Manage Inventory", command=self.manage_inventory).pack(pady=10)
-        ctk.CTkButton(self.root, text="Logout", command=self.logout).pack(pady=10)
+        admin_frame = ctk.CTkFrame(self.root)
+        admin_frame.pack(expand=True)
+
+        ctk.CTkButton(admin_frame, text="Manage Inventory", command=self.manage_inventory).pack(pady=10)
+        ctk.CTkButton(admin_frame, text="Logout", command=self.logout).pack(pady=10)
 
     def create_employee_screen(self):
         self.clear_screen()
 
-        ctk.CTkLabel(self.root, text="Customer Name:").pack(pady=5)
-        self.customer_name_entry = ctk.CTkEntry(self.root)
-        self.customer_name_entry.pack(pady=5)
+        employee_frame = ctk.CTkFrame(self.root)
+        employee_frame.pack(expand=True, fill="both")
 
-        ctk.CTkLabel(self.root, text="Customer Phone:").pack(pady=5)
-        self.customer_phone_entry = ctk.CTkEntry(self.root)
-        self.customer_phone_entry.pack(pady=5)
+        ctk.CTkLabel(employee_frame, text="Customer Name:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+        self.customer_name_entry = ctk.CTkEntry(employee_frame)
+        self.customer_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-        ctk.CTkLabel(self.root, text="Customer Email:").pack(pady=5)
-        self.customer_email_entry = ctk.CTkEntry(self.root)
-        self.customer_email_entry.pack(pady=5)
+        ctk.CTkLabel(employee_frame, text="Customer Phone:").grid(row=1, column=0, padx=10, pady=5, sticky="e")
+        self.customer_phone_entry = ctk.CTkEntry(employee_frame)
+        self.customer_phone_entry.grid(row=1, column=1, padx=10, pady=5)
+
+        ctk.CTkLabel(employee_frame, text="Customer Email:").grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        self.customer_email_entry = ctk.CTkEntry(employee_frame)
+        self.customer_email_entry.grid(row=2, column=1, padx=10, pady=5)
 
         # Inventory Treeview
-        self.inventory_frame = ctk.CTkFrame(self.root)
-        self.inventory_frame.pack(pady=10, fill="both", expand=True)
+        self.inventory_frame = ctk.CTkFrame(employee_frame, fg_color="black")
+        self.inventory_frame.grid(row=3, column=0, columnspan=2, pady=10, sticky="nsew")
         self.inventory_table = self.create_treeview(self.inventory_frame, ["ID", "Name", "Price", "Stock"])
         self.populate_inventory()
 
         # Add to Bill Button
-        ctk.CTkButton(self.root, text="Add to Bill", command=self.add_to_bill).pack(pady=10)
+        ctk.CTkButton(employee_frame, text="Add to Bill", command=self.add_to_bill).grid(row=4, column=0, columnspan=2, pady=10)
 
         # Billing Treeview
-        self.bill_frame = ctk.CTkFrame(self.root)
-        self.bill_frame.pack(pady=10, fill="both", expand=True)
-        self.bill_table = self.create_treeview(self.bill_frame, ["ID", "Name", "Quantity", "Price", "Tax", "Total"])
+        self.bill_frame = ctk.CTkFrame(employee_frame)
+        self.bill_frame.grid(row=5, column=0, columnspan=2, pady=10, sticky="nsew")
+        self.bill_table = self.create_treeview(self.bill_frame, ["ID", "Name", "Quantity", "Price", "Tax %", "Total"])
 
         # Finalize Bill Button
-        ctk.CTkButton(self.root, text="Finalize Bill", command=self.finalize_bill).pack(pady=10)
+        ctk.CTkButton(employee_frame, text="Finalize Bill", command=self.finalize_bill).grid(row=6, column=0, columnspan=2, pady=10)
+
+        employee_frame.rowconfigure(3, weight=1)
+        employee_frame.rowconfigure(5, weight=1)
+        employee_frame.columnconfigure(1, weight=1)
 
     def create_treeview(self, parent, columns):
         tree = ttk.Treeview(parent, columns=columns, show="headings")
@@ -131,9 +144,10 @@ class SimpleBillingApp:
             messagebox.showerror("Error", f"{product_name} is out of stock.")
             return
 
-        # Get quantity and calculate tax and total
-        quantity = 1  # Default quantity
-        tax = round(0.18 * price, 2)  # 18% GST
+        # Get quantity and tax input
+        tax_percent = float(messagebox.askstring("Tax Input", "Enter tax percentage:") or 18)
+        quantity = 1
+        tax = round((tax_percent / 100) * price, 2)
         total = round((price + tax) * quantity, 2)
 
         for bill_item in self.bill_table.get_children():
@@ -145,11 +159,11 @@ class SimpleBillingApp:
                     return
 
                 total = round((price + tax) * quantity, 2)
-                self.bill_table.item(bill_item, values=(product_id, product_name, quantity, price, tax, total))
+                self.bill_table.item(bill_item, values=(product_id, product_name, quantity, price, tax_percent, total))
                 self.update_stock(product_id, stock - 1)
                 return
 
-        self.bill_table.insert("", "end", values=(product_id, product_name, quantity, price, tax, total))
+        self.bill_table.insert("", "end", values=(product_id, product_name, quantity, price, tax_percent, total))
         self.update_stock(product_id, stock - 1)
 
     def update_stock(self, product_id, new_stock):
@@ -184,18 +198,18 @@ class SimpleBillingApp:
         pdf.cell(50, 10, txt="Product", border=1)
         pdf.cell(30, 10, txt="Quantity", border=1)
         pdf.cell(30, 10, txt="Price", border=1)
-        pdf.cell(30, 10, txt="Tax", border=1)
+        pdf.cell(30, 10, txt="Tax %", border=1)
         pdf.cell(30, 10, txt="Total", border=1, ln=True)
 
         for item in self.bill_table.get_children():
             product = self.bill_table.item(item, "values")
-            product_id, product_name, quantity, price, tax, total = product
+            product_id, product_name, quantity, price, tax_percent, total = product
             total_amount += float(total)
 
             pdf.cell(50, 10, txt=str(product_name), border=1)
             pdf.cell(30, 10, txt=str(quantity), border=1)
             pdf.cell(30, 10, txt=f"{price}", border=1)
-            pdf.cell(30, 10, txt=f"{tax}", border=1)
+            pdf.cell(30, 10, txt=f"{tax_percent}", border=1)
             pdf.cell(30, 10, txt=f"{total}", border=1, ln=True)
 
         pdf.cell(200, 10, txt="", ln=True)  # Empty line
@@ -210,15 +224,16 @@ class SimpleBillingApp:
     def manage_inventory(self):
         self.clear_screen()
 
-        self.inventory_frame = ctk.CTkFrame(self.root)
-        self.inventory_frame.pack(pady=10, fill="both", expand=True)
-        self.inventory_table = self.create_treeview(self.inventory_frame, ["ID", "Name", "Price", "Stock"])
+        admin_frame = ctk.CTkFrame(self.root)
+        admin_frame.pack(expand=True, fill="both")
+
+        self.inventory_table = self.create_treeview(admin_frame, ["ID", "Name", "Price", "Stock"])
         self.populate_inventory()
 
-        ctk.CTkButton(self.root, text="Add Product", command=self.add_product).pack(pady=5)
-        ctk.CTkButton(self.root, text="Update Product", command=self.update_product).pack(pady=5)
-        ctk.CTkButton(self.root, text="Delete Product", command=self.delete_product).pack(pady=5)
-        ctk.CTkButton(self.root, text="Back", command=self.create_admin_screen).pack(pady=5)
+        ctk.CTkButton(admin_frame, text="Add Product", command=self.add_product).pack(pady=5)
+        ctk.CTkButton(admin_frame, text="Update Product", command=self.update_product).pack(pady=5)
+        ctk.CTkButton(admin_frame, text="Delete Product", command=self.delete_product).pack(pady=5)
+        ctk.CTkButton(admin_frame, text="Back", command=self.create_admin_screen).pack(pady=5)
 
     def add_product(self):
         add_window = ctk.CTkToplevel(self.root)
