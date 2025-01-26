@@ -213,9 +213,9 @@ class SimpleBillingApp:
             pdf.cell(30, 10, txt=f"{total}", border=1, ln=True)
 
         pdf.cell(200, 10, txt="", ln=True)  # Empty line
-        pdf.cell(200, 10, txt=f"Total Amount: INR {total_amount}", ln=True)
+        pdf.cell(200, 10, txt=f"Total Amount: Rs. {total_amount}", ln=True)
 
-        pdf.output("invoice.pdf")
+        pdf.output("{customer_name}.pdf")
         messagebox.showinfo("Success", "Invoice generated as invoice.pdf")
 
         for item in self.bill_table.get_children():
