@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import sqlite3
 from fpdf import FPDF
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, simpledialog
 
 # Database setup
 conn = sqlite3.connect('database.db')
@@ -145,7 +145,7 @@ class SimpleBillingApp:
             return
 
         # Get quantity and tax input
-        tax_percent = float(messagebox.askstring("Tax Input", "Enter tax percentage:") or 18)
+        tax_percent = float(simpledialog.askstring("Tax Input", "Enter tax percentage:") or 18)
         quantity = 1
         tax = round((tax_percent / 100) * price, 2)
         total = round((price + tax) * quantity, 2)
