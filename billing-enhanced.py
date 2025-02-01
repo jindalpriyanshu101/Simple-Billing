@@ -2,11 +2,12 @@ import customtkinter as ctk
 import sqlite3
 from fpdf import FPDF
 from tkinter import messagebox, ttk
-from tkinter import simpledialog, PhotoImage
-from customtkinter import CTkImage
+from tkinter import simpledialog
 from PIL import Image
 from datetime import datetime
 import random
+import customtkinter as ctk
+from PIL import Image, ImageDraw
 
 # Database setup
 conn = sqlite3.connect('database.db')
@@ -36,44 +37,116 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS payment_logs (
     customer_details TEXT NOT NULL
 )''')
 conn.commit()
-
 class SimpleBillingApp:
     def __init__(self, root):
         self.root = root
         self.root.title("DFC Fast Food")
-        self.root.geometry("800x600")
+        self.root.geometry("1100x700")
+        self.root.configure(bg="#1a1a1a")  # Dark background for contrast
 
-        ctk.set_appearance_mode("System")  # Light or Dark mode based on system settings
+        ctk.set_appearance_mode("Dark")  # Ensuring a modern dark mode
         ctk.set_default_color_theme("blue")
 
         self.logged_in_user = None
         self.create_login_screen()
 
+
     def create_login_screen(self):
-        """Create the login screen with logo and owner name."""
+        """Create the ultimate login screen with perfect alignment & modern aesthetics."""
         self.clear_screen()
 
-        login_frame = ctk.CTkFrame(self.root)
-        login_frame.pack(expand=True)
+        # 🟢 Glassmorphic Login Card (Spaced & Well-Designed)
+        login_frame = ctk.CTkFrame(
+            self.root, corner_radius=30, fg_color="#2C2F33",  
+            border_width=2, border_color="#7289DA",  
+            width=1000, height=600
+        )
+        login_frame.pack(expand=True, pady=30)
 
-        logo_image = Image.open("logo.png")  # Ensure the file path is correct
-        logo = CTkImage(dark_image=logo_image, size=(100, 100))  # Adjust size as needed
-        logo_label = ctk.CTkLabel(login_frame, image=logo, text="")
-        logo_label.pack(pady=10)
+        # 🟢 Centered Circular Logo with Border
+        logo_image = Image.open("logo.png").resize((120, 120))  # Resize logo
+        logo_image = logo_image.convert("RGBA")
+
+        # Create a circular mask
+        mask = Image.new("L", (120, 120), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, 120, 120), fill=255)  # Make it circular
+
+        # Apply mask to the logo to make it circular
+        circular_logo = Image.new("RGBA", (120, 120), (0, 0, 0, 0))
+        circular_logo.paste(logo_image, (0, 0), mask)
+
+        # Create border effect
+        border_size = 5
+        border_color = "#7289DA"
+        border = Image.new("RGBA", (120 + border_size * 2, 120 + border_size * 2), (0, 0, 0, 0))
+        border_draw = ImageDraw.Draw(border)
+        border_draw.ellipse((0, 0, 120 + border_size * 2, 120 + border_size * 2), fill=border_color)  # Outer border
+        border.paste(circular_logo, (border_size, border_size), circular_logo)
+
+        # Convert image to CTkImage
+        logo = ctk.CTkImage(dark_image=border, size=(130, 130))  # Slightly larger to fit border
+
+        # 🟢 Circular Frame for Logo
+        logo_frame = ctk.CTkFrame(login_frame, width=140, height=140, corner_radius=70, fg_color="#2C2F33")
+        logo_frame.pack(pady=20)
+
+        logo_label = ctk.CTkLabel(logo_frame, image=logo, text="")
+        logo_label.pack(expand=True)
+
+        # 🟢 Business Name & Owner (Centered & Best Font)
+        ctk.CTkLabel(login_frame, text="DFC Fast Food", font=("Inter", 26, "bold"), text_color="#ffffff").pack(pady=(5, 0))
+        ctk.CTkLabel(login_frame, text="Owner: Hasnain Mallah", font=("Inter", 16), text_color="#b0b0b0").pack(pady=(0, 15))
+
+        # 🟢 Username Input (Properly Spaced)
+        ctk.CTkLabel(login_frame, text="Username", font=("Poppins", 16), text_color="#ffffff").pack(anchor="w", padx=50, pady=(10, 5))
+        self.username_entry = ctk.CTkEntry(
+            login_frame, width=600, height=50, corner_radius=15,
+            fg_color="#3B3F45", text_color="#ffffff"
+        )
+        self.username_entry.pack(pady=(0, 10))
+
+        # 🟢 Password Input (Properly Spaced & Styled)
+        ctk.CTkLabel(login_frame, text="Password", font=("Poppins", 16), text_color="#ffffff").pack(anchor="w", padx=10, pady=(10, 5))
+
+        # Create a frame to hold the password entry & eye icon
+        password_frame = ctk.CTkFrame(login_frame, fg_color="#3B3F45", corner_radius=15)
+        password_frame.pack(pady=(0, 15))
+
+        # Password Entry Field
+        self.password_entry = ctk.CTkEntry(
+            password_frame, width=500, height=50, corner_radius=15, show="*",
+            fg_color="transparent", text_color="#ffffff", border_width=0  # Transparent to blend inside the frame
+        )
+        self.password_entry.pack(side="left", padx=(10, 5))
+
+        # 🟢 Eye Icon Inside Input Box
+        self.show_password = False
+        def toggle_password():
+            self.show_password = not self.show_password
+            self.password_entry.configure(show="" if self.show_password else "*")
+
+        eye_icon = ctk.CTkButton(
+            password_frame, text="👁", font=("Poppins", 14), width=40, height=40,
+            fg_color="transparent", hover_color="#5B6EAE",
+            corner_radius=25, command=toggle_password
+        )
+        eye_icon.pack(side="right", padx=5)  # Inside the input box
 
 
-        ctk.CTkLabel(login_frame, text="DFC Fast Food", font=("Helvetica", 18, "bold")).pack()
-        ctk.CTkLabel(login_frame, text="Owner: Hasnain Mallah", font=("Helvetica", 12)).pack(pady=5)
+        # 🟢 Animated Login Button (Best Look)
+        login_btn = ctk.CTkButton(
+            login_frame, text="Login", font=("Inter", 18, "bold"), text_color="#ffffff",
+            fg_color="#7289DA", hover_color="#5B6EAE", corner_radius=25,
+            width=400, height=50, command=self.login
+        )
+        login_btn.pack(pady=30)
 
-        ctk.CTkLabel(login_frame, text="Username:").pack(pady=5)
-        self.username_entry = ctk.CTkEntry(login_frame)
-        self.username_entry.pack(pady=5)
 
-        ctk.CTkLabel(login_frame, text="Password:").pack(pady=5)
-        self.password_entry = ctk.CTkEntry(login_frame, show="*")
-        self.password_entry.pack(pady=5)
-
-        ctk.CTkButton(login_frame, text="Login", command=self.login).pack(pady=10)
+    def clear_screen(self):
+        """Clear the root window before loading a new screen."""
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
     def login(self):
         """Handle user login."""
